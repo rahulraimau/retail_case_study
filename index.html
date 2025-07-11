@@ -3,90 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retail Customer Analysis Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <title>Retail Case Study Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #374151; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        .card { background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); padding: 1.5rem; }
-        canvas { max-width: 100%; height: auto; }
-        .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .dashboard-title {
+            text-align: center;
+            margin: 20px 0;
+            color: #343a40;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .metric-box {
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .metric-box h4 {
+            margin-bottom: 10px;
+            color: #343a40;
+        }
+        .metric-box p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
     </style>
 </head>
-<body class="antialiased">
+<body>
     <div class="container">
-        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8 mt-4 rounded-lg bg-white p-4 shadow-lg">Retail Customer Analysis Dashboard</h1>
-        <div id="loadingMessage" class="text-center text-gray-600 text-lg">
-            <div class="loading-spinner"></div>
-            <p>Loading data and generating charts...</p>
+        <h1 class="dashboard-title">Retail Case Study Dashboard</h1>
+
+        <!-- Key Metrics -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="metric-box">
+                    <h4>Total Sales (e-Shop)</h4>
+                    <p>$19,824,816.05</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-box">
+                    <h4>Negative Transactions</h4>
+                    <p>2,177</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-box">
+                    <h4>Customers with >10 Transactions</h4>
+                    <p>6</p>
+                </div>
+            </div>
         </div>
-        <div id="dashboardContent" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card flex flex-col items-center justify-center text-center">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Transactions</h2>
-                    <p id="totalTransactions" class="text-4xl font-bold text-indigo-600">Loading...</p>
+
+        <!-- Charts -->
+        <div class="row">
+            <!-- Product Category Popularity by Gender -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Product Category Popularity by Gender</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="genderProductChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="card flex flex-col items-center justify-center text-center">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Unique Customers</h2>
-                    <p id="totalCustomers" class="text-4xl font-bold text-green-600">Loading...</p>
+            </div>
+            <!-- Store Type Sales by Value -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Store Type Sales by Value</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="storeSalesValueChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="card flex flex-col items-center justify-center text-center">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Sales Value</h2>
-                    <p id="totalSalesValue" class="text-4xl font-bold text-purple-600">Loading...</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Age Distribution -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Age Distribution of Customers</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="ageDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sales by Product Category -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Sales by Product Category</div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="productSalesChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript for Charts -->
     <script>
-        Chart.register(ChartDataLabels);
-        document.addEventListener('DOMContentLoaded', function() {
-            const loadingMessage = document.getElementById('loadingMessage');
-            const dashboardContent = document.getElementById('dashboardContent');
-            
-            fetch('Customer_Final.csv')
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - Could not load Customer_Final.csv.`);
-                    return response.text();
-                })
-                .then(csvText => {
-                    const lines = csvText.split('\\n');
-                    const headers = lines[0].split(',');
-                    const data = lines.slice(1).map(line => {
-                        const values = line.split(',');
-                        let row = {};
-                        headers.forEach((header, i) => {
-                            row[header.trim()] = values[i] ? values[i].trim() : '';
-                        });
-                        return row;
-                    }).filter(row => Object.values(row).some(val => val !== ''));
+        // Product Category Popularity by Gender
+        const genderProductChart = {
+            type: 'bar',
+            data: {
+                labels: ['Female', 'Male'],
+                datasets: [
+                    {
+                        label: 'Bags',
+                        data: [2362, 2346],
+                        backgroundColor: '#4BC0C0'
+                    },
+                    {
+                        label: 'Books',
+                        data: [7070, 7587],
+                        backgroundColor: '#FF6384'
+                    },
+                    {
+                        label: 'Clothing',
+                        data: [3425, 3748],
+                        backgroundColor: '#36A2EB'
+                    },
+                    {
+                        label: 'Electronics',
+                        data: [5832, 6476],
+                        backgroundColor: '#FFCE56'
+                    },
+                    {
+                        label: 'Footwear',
+                        data: [3716, 3555],
+                        backgroundColor: '#9966FF'
+                    },
+                    {
+                        label: 'Home and Kitchen',
+                        data: [4895, 5041],
+                        backgroundColor: '#FF9F40'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Gender' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Total Quantity Sold' },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Product Category Popularity by Gender' }
+                }
+            }
+        };
+        new Chart(document.getElementById('genderProductChart'), genderProductChart);
 
-                    const numericCols = ['Qty', 'Rate', 'Tax', 'total_amt'];
-                    data.forEach(row => numericCols.forEach(col => row[col] = parseFloat(row[col])));
+        // Store Type Sales by Value
+        const storeSalesValueChart = {
+            type: 'bar',
+            data: {
+                labels: ['e-Shop', 'Flagship Store', 'MBR', 'TeleShop'],
+                datasets: [{
+                    label: 'Sales Value ($)',
+                    data: [19824816.05, 9715688.15, 9674486.04, 9364781.09],
+                    backgroundColor: ['#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Sales Value ($)' },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Store Type Sales by Value' }
+                }
+            }
+        };
+        new Chart(document.getElementById('storeSalesValueChart'), storeSalesValueChart);
 
-                    document.getElementById('totalTransactions').textContent = data.length.toLocaleString();
-                    const uniqueCustomers = new Set(data.map(d => d.customer_Id)).size;
-                    document.getElementById('totalCustomers').textContent = uniqueCustomers.toLocaleString();
-                    const totalSalesValue = data.reduce((sum, d) => sum + d.total_amt, 0);
-                    document.getElementById('totalSalesValue').textContent = `$${totalSalesValue.toFixed(2).toLocaleString()}`;
+        // Load Customer_Final.csv for dynamic charts
+        Papa.parse('Customer_Final.csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const data = results.data;
 
-                    loadingMessage.classList.add('hidden');
-                    dashboardContent.classList.remove('hidden');
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('totalTransactions').textContent = 'Error';
-                    document.getElementById('totalCustomers').textContent = 'Error';
-                    document.getElementById('totalSalesValue').textContent = 'Error';
-                    const errorMsg = document.createElement('div');
-                    errorMsg.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-                    errorMsg.innerHTML = `<strong class="font-bold">Data Load Error:</strong> ${error.message}<br><small>Ensure Customer_Final.csv is in the same folder as this HTML file.</small>`;
-                    document.querySelector('.container').prepend(errorMsg);
+                // Age Distribution
+                const ageData = data.map(row => parseInt(row.Age)).filter(age => age > 0);
+                const ageBins = [];
+                for (let i = 0; i <= 100; i += 5) {
+                    ageBins.push(ageData.filter(age => age >= i && age < i + 5).length);
+                }
+                const ageLabels = Array.from({length: 20}, (_, i) => `${i * 5}-${i * 5 + 5}`);
+
+                const ageDistributionChart = {
+                    type: 'histogram',
+                    data: {
+                        labels: ageLabels,
+                        datasets: [{
+                            label: 'Number of Customers',
+                            data: ageBins,
+                            backgroundColor: '#36A2EB'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Age Range' } },
+                            y: { title: { display: true, text: 'Number of Customers' } }
+                        },
+                        plugins: {
+                            title: { display: true, text: 'Age Distribution of Customers' }
+                        }
+                    }
+                };
+                new Chart(document.getElementById('ageDistributionChart'), ageDistributionChart);
+
+                // Sales by Product Category
+                const prodCatSales = {};
+                data.forEach(row => {
+                    const prodCat = row.prod_cat;
+                    const totalAmt = parseFloat(row.total_amt);
+                    if (prodCat && !isNaN(totalAmt)) {
+                        prodCatSales[prodCat] = (prodCatSales[prodCat] || 0) + totalAmt;
+                    }
                 });
+                const productSalesChart = {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(prodCatSales),
+                        datasets: [{
+                            data: Object.values(prodCatSales),
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right' },
+                            title: { display: true, text: 'Sales by Product Category' }
+                        }
+                    }
+                };
+                new Chart(document.getElementById('productSalesChart'), productSalesChart);
+            },
+            error: function(error) {
+                console.error('Error loading CSV:', error);
+                alert('Failed to load Customer_Final.csv. Please ensure the file is in the same directory.');
+            }
+        });
     </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
