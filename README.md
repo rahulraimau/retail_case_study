@@ -68,7 +68,7 @@ The total amount spent by these customers between January 1, 2014, and March 1, 
 How to Use the Dashboard
 The retail_dashboard.html file provides an interactive visualization of some of the key findings.
 
-To view the dashboard:Open Retail Customer Analysis Dashboard
+To view the dashboard:👉 [Open retail.html](https://rahulraimau.github.io/rahulraimau/retail.html)
 
 Run the Jupyter Notebook first: Ensure you have executed all cells in retail_customer_analysis.ipynb. This notebook generates the Customer_Final.csv file, which the HTML dashboard relies on.
 
