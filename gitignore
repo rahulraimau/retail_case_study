@@ -1,0 +1,37 @@
+#Jupyter Notebook files
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Distribution / build outputs
+dist/
+build/
+*.egg-info/
+
+# Virtual environment
+.venv/
+env/
+venv/
+/htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.mypy_cache/
+
+# IDE specific files (e.g., VS Code, PyCharm)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Generated data files
+Customer_Final.csv
