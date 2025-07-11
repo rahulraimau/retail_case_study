@@ -4,63 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retail Customer Analysis Dashboard</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js for visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
-    <!-- Chart.js Data Labels Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #374151;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .card {
-            background-color: #ffffff;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 1.5rem;
-        }
-        canvas {
-            max-width: 100%;
-            height: auto;
-        }
-        /* Simple Loading Spinner */
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #6366f1;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 2rem auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #374151; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .card { background-color: #ffffff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); padding: 1.5rem; }
+        canvas { max-width: 100%; height: auto; }
+        .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="antialiased">
     <div class="container">
         <h1 class="text-4xl font-bold text-center text-gray-800 mb-8 mt-4 rounded-lg bg-white p-4 shadow-lg">Retail Customer Analysis Dashboard</h1>
-
         <div id="loadingMessage" class="text-center text-gray-600 text-lg">
             <div class="loading-spinner"></div>
             <p>Loading data and generating charts...</p>
         </div>
-
         <div id="dashboardContent" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Key Metric Cards -->
                 <div class="card flex flex-col items-center justify-center text-center">
                     <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Transactions</h2>
                     <p id="totalTransactions" class="text-4xl font-bold text-indigo-600">Loading...</p>
@@ -74,436 +39,54 @@
                     <p id="totalSalesValue" class="text-4xl font-bold text-purple-600">Loading...</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <!-- Chart 1: Product Category Popularity by Gender -->
-                <div class="card">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Product Category Popularity by Gender (Quantity)</h2>
-                    <canvas id="genderProductChart"></canvas>
-                </div>
-
-                <!-- Chart 2: Top 5 Cities by Customer Count -->
-                <div class="card">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Top 5 Cities by Unique Customer Count</h2>
-                    <canvas id="topCitiesChart"></canvas>
-                </div>
-
-                <!-- Chart 3: Sales by Store Type (Value) -->
-                <div class="card">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Total Sales Value by Store Type</h2>
-                    <canvas id="storeTypeSalesValueChart"></canvas>
-                </div>
-
-                <!-- Chart 4: Sales by Store Type (Quantity) -->
-                <div class="card">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Total Sales Quantity by Store Type</h2>
-                    <canvas id="storeTypeSalesQuantityChart"></canvas>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-6 mb-8">
-                <!-- Chart 5: Total Sales by Product Category -->
-                <div class="card">
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Total Sales Value by Product Category</h2>
-                    <canvas id="productCategorySalesChart"></canvas>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        // Register the data labels plugin globally
         Chart.register(ChartDataLabels);
-
         document.addEventListener('DOMContentLoaded', function() {
             const loadingMessage = document.getElementById('loadingMessage');
             const dashboardContent = document.getElementById('dashboardContent');
-
-            // Corrected fetch URL for files generated within the Canvas environment
-            fetch('/_api/v1/files/Customer_Final.csv')
+            
+            fetch('Customer_Final.csv')
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status} - Could not load Customer_Final.csv. Please ensure the Jupyter Notebook was run successfully and the file exists.`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status} - Could not load Customer_Final.csv.`);
                     return response.text();
                 })
                 .then(csvText => {
-                    // Parse CSV data
-                    const lines = csvText.split('\n');
+                    const lines = csvText.split('\\n');
                     const headers = lines[0].split(',');
                     const data = lines.slice(1).map(line => {
                         const values = line.split(',');
                         let row = {};
                         headers.forEach((header, i) => {
-                            row[header.trim()] = values[i] ? values[i].trim() : ''; // Handle potential empty values
+                            row[header.trim()] = values[i] ? values[i].trim() : '';
                         });
                         return row;
-                    });
+                    }).filter(row => Object.values(row).some(val => val !== ''));
 
-                    // Filter out any empty rows that might result from trailing newlines
-                    const filteredData = data.filter(row => Object.values(row).some(val => val !== ''));
-
-                    // Convert numeric columns
                     const numericCols = ['Qty', 'Rate', 'Tax', 'total_amt'];
-                    filteredData.forEach(row => {
-                        numericCols.forEach(col => {
-                            row[col] = parseFloat(row[col]);
-                        });
-                    });
+                    data.forEach(row => numericCols.forEach(col => row[col] = parseFloat(row[col])));
 
-                    // --- Key Metrics ---
-                    document.getElementById('totalTransactions').textContent = filteredData.length.toLocaleString();
-                    const uniqueCustomers = new Set(filteredData.map(d => d.customer_Id)).size;
+                    document.getElementById('totalTransactions').textContent = data.length.toLocaleString();
+                    const uniqueCustomers = new Set(data.map(d => d.customer_Id)).size;
                     document.getElementById('totalCustomers').textContent = uniqueCustomers.toLocaleString();
-                    const totalSalesValue = filteredData.reduce((sum, d) => sum + d.total_amt, 0);
-                    document.getElementById('totalSalesValue').textContent = `$${totalSalesValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    const totalSalesValue = data.reduce((sum, d) => sum + d.total_amt, 0);
+                    document.getElementById('totalSalesValue').textContent = `$${totalSalesValue.toFixed(2).toLocaleString()}`;
 
-
-                    // --- Chart 1: Product Category Popularity by Gender (Quantity) ---
-                    const genderProductData = {};
-                    filteredData.forEach(d => {
-                        if (d.Gender && d.prod_cat && !isNaN(d.Qty)) {
-                            if (!genderProductData[d.Gender]) {
-                                genderProductData[d.Gender] = {};
-                            }
-                            genderProductData[d.Gender][d.prod_cat] = (genderProductData[d.Gender][d.prod_cat] || 0) + d.Qty;
-                        }
-                    });
-
-                    const productCategories = Array.from(new Set(filteredData.map(d => d.prod_cat))).filter(Boolean);
-                    const genders = ['M', 'F']; // Assuming M for Male, F for Female
-
-                    const genderProductDatasets = productCategories.map(cat => {
-                        return {
-                            label: cat,
-                            data: genders.map(g => genderProductData[g] ? (genderProductData[g][cat] || 0) : 0),
-                            backgroundColor: getRandomColor(),
-                            borderColor: 'rgba(0,0,0,0.1)',
-                            borderWidth: 1
-                        };
-                    });
-
-                    new Chart(document.getElementById('genderProductChart'), {
-                        type: 'bar',
-                        data: {
-                            labels: genders.map(g => g === 'M' ? 'Male' : 'Female'),
-                            datasets: genderProductDatasets
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Product Category Popularity by Gender (Quantity Sold)'
-                                },
-                                datalabels: {
-                                    anchor: 'end',
-                                    align: 'top',
-                                    formatter: (value) => value.toLocaleString(),
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Gender'
-                                    }
-                                },
-                                y: {
-                                    stacked: true,
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Total Quantity Sold'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    // --- Chart 2: Top 5 Cities by Customer Count ---
-                    const cityCustomerCounts = {};
-                    filteredData.forEach(d => {
-                        if (d.City_Code) {
-                            cityCustomerCounts[d.City_Code] = (cityCustomerCounts[d.City_Code] || new Set()).add(d.customer_Id);
-                        }
-                    });
-                    const cityCountsArray = Object.entries(cityCustomerCounts).map(([city, customers]) => ({
-                        city: city,
-                        count: customers.size
-                    }));
-                    cityCountsArray.sort((a, b) => b.count - a.count);
-                    const top5Cities = cityCountsArray.slice(0, 5);
-
-                    new Chart(document.getElementById('topCitiesChart'), {
-                        type: 'bar',
-                        data: {
-                            labels: top5Cities.map(d => `City ${d.city}`),
-                            datasets: [{
-                                label: 'Unique Customers',
-                                data: top5Cities.map(d => d.count),
-                                backgroundColor: [
-                                    'rgba(255, 99, 132, 0.8)',
-                                    'rgba(54, 162, 235, 0.8)',
-                                    'rgba(255, 206, 86, 0.8)',
-                                    'rgba(75, 192, 192, 0.8)',
-                                    'rgba(153, 102, 255, 0.8)'
-                                ],
-                                borderColor: [
-                                    'rgba(255, 99, 132, 1)',
-                                    'rgba(54, 162, 235, 1)',
-                                    'rgba(255, 206, 86, 1)',
-                                    'rgba(75, 192, 192, 1)',
-                                    'rgba(153, 102, 255, 1)'
-                                ],
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Top 5 Cities by Unique Customer Count'
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                datalabels: {
-                                    anchor: 'end',
-                                    align: 'top',
-                                    formatter: (value) => value.toLocaleString(),
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'City Code'
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Number of Unique Customers'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    // --- Chart 3: Sales by Store Type (Value) ---
-                    const storeTypeSalesValue = {};
-                    filteredData.forEach(d => {
-                        if (d.Store_type && !isNaN(d.total_amt)) {
-                            storeTypeSalesValue[d.Store_type] = (storeTypeSalesValue[d.Store_type] || 0) + d.total_amt;
-                        }
-                    });
-                    const storeTypesValueArray = Object.entries(storeTypeSalesValue).map(([type, value]) => ({ type, value }));
-                    storeTypesValueArray.sort((a, b) => b.value - a.value);
-
-                    new Chart(document.getElementById('storeTypeSalesValueChart'), {
-                        type: 'pie',
-                        data: {
-                            labels: storeTypesValueArray.map(d => d.type),
-                            datasets: [{
-                                data: storeTypesValueArray.map(d => d.value),
-                                backgroundColor: storeTypesValueArray.map(() => getRandomColor()),
-                                borderColor: '#ffffff',
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Total Sales Value by Store Type'
-                                },
-                                legend: {
-                                    position: 'right'
-                                },
-                                datalabels: {
-                                    formatter: (value, ctx) => {
-                                        let sum = 0;
-                                        let dataArr = ctx.chart.data.datasets[0].data;
-                                        dataArr.map(data => {
-                                            sum += data;
-                                        });
-                                        let percentage = (value * 100 / sum).toFixed(2) + '%';
-                                        return percentage;
-                                    },
-                                    color: '#fff',
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    // --- Chart 4: Sales by Store Type (Quantity) ---
-                    const storeTypeSalesQuantity = {};
-                    filteredData.forEach(d => {
-                        if (d.Store_type && !isNaN(d.Qty)) {
-                            storeTypeSalesQuantity[d.Store_type] = (storeTypeSalesQuantity[d.Store_type] || 0) + d.Qty;
-                        }
-                    });
-                    const storeTypesQuantityArray = Object.entries(storeTypeSalesQuantity).map(([type, qty]) => ({ type, qty }));
-                    storeTypesQuantityArray.sort((a, b) => b.qty - a.qty);
-
-                    new Chart(document.getElementById('storeTypeSalesQuantityChart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: storeTypesQuantityArray.map(d => d.type),
-                            datasets: [{
-                                data: storeTypesQuantityArray.map(d => d.qty),
-                                backgroundColor: storeTypesQuantityArray.map(() => getRandomColor()),
-                                borderColor: '#ffffff',
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Total Sales Quantity by Store Type'
-                                },
-                                legend: {
-                                    position: 'right'
-                                },
-                                datalabels: {
-                                    formatter: (value, ctx) => {
-                                        let sum = 0;
-                                        let dataArr = ctx.chart.data.datasets[0].data;
-                                        dataArr.map(data => {
-                                            sum += data;
-                                        });
-                                        let percentage = (value * 100 / sum).toFixed(2) + '%';
-                                        return percentage;
-                                    },
-                                    color: '#fff',
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    // --- Chart 5: Total Sales by Product Category ---
-                    const productCategorySales = {};
-                    filteredData.forEach(d => {
-                        if (d.prod_cat && !isNaN(d.total_amt)) {
-                            productCategorySales[d.prod_cat] = (productCategorySales[d.prod_cat] || 0) + d.total_amt;
-                        }
-                    });
-                    const productCategorySalesArray = Object.entries(productCategorySales).map(([category, value]) => ({ category, value }));
-                    productCategorySalesArray.sort((a, b) => b.value - a.value);
-
-                    new Chart(document.getElementById('productCategorySalesChart'), {
-                        type: 'bar',
-                        data: {
-                            labels: productCategorySalesArray.map(d => d.category),
-                            datasets: [{
-                                label: 'Total Sales Value ($)',
-                                data: productCategorySalesArray.map(d => d.value),
-                                backgroundColor: productCategorySalesArray.map(() => getRandomColor()),
-                                borderColor: 'rgba(0,0,0,0.1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: 'Total Sales Value by Product Category'
-                                },
-                                legend: {
-                                    display: false
-                                },
-                                datalabels: {
-                                    anchor: 'end',
-                                    align: 'top',
-                                    formatter: (value) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Product Category'
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Total Sales Value ($)'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    // Hide loading message and show dashboard content
                     loadingMessage.classList.add('hidden');
                     dashboardContent.classList.remove('hidden');
-
                 })
                 .catch(error => {
-                    console.error('Error fetching or parsing CSV:', error);
+                    console.error('Error:', error);
                     document.getElementById('totalTransactions').textContent = 'Error';
                     document.getElementById('totalCustomers').textContent = 'Error';
                     document.getElementById('totalSalesValue').textContent = 'Error';
-                    // Display a user-friendly message on the dashboard if data loading fails
-                    const dashboardContainer = document.querySelector('.container');
-                    const errorMessage = document.createElement('div');
-                    errorMessage.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4';
-                    errorMessage.setAttribute('role', 'alert');
-                    errorMessage.innerHTML = `
-                        <strong class="font-bold">Data Loading Error!</strong>
-                        <span class="block sm:inline">${error.message}</span>
-                        <p class="mt-2 text-sm">Please ensure the Jupyter Notebook was run successfully and 'Customer_Final.csv' is available. If you are running this locally, ensure the file is in the same directory.</p>
-                    `;
-                    dashboardContainer.prepend(errorMessage);
-                    loadingMessage.classList.add('hidden'); // Hide loading spinner
-                    dashboardContent.classList.add('hidden'); // Hide dashboard content
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+                    errorMsg.innerHTML = `<strong class="font-bold">Data Load Error:</strong> ${error.message}<br><small>Ensure Customer_Final.csv is in the same folder as this HTML file.</small>`;
+                    document.querySelector('.container').prepend(errorMsg);
                 });
-
-            // Helper function to generate random colors for charts
-            function getRandomColor() {
-                const letters = '0123456789ABCDEF';
-                let color = '#';
-                for (let i = 0; i < 6; i++) {
-                    color += letters[Math.floor(Math.random() * 16)];
-                }
-                return color;
-            }
-        });
     </script>
 </body>
 </html>
-
